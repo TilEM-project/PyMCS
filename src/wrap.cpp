@@ -20,11 +20,11 @@ PYBIND11_MODULE(PyMCS, m) {
         .def("__exit__", &System::close);
 
     py::class_<Channel>(m, "Channel")
-        .def("getClosedLoopMoveAcceleration", &Channel::getClosedLoopMoveAcceleration)
+        // .def("getClosedLoopMoveAcceleration", &Channel::getClosedLoopMoveAcceleration)
         .def("getClosedLoopMoveSpeed", &Channel::getClosedLoopMoveSpeed)
         .def("getPositionLimit", &Channel::getPositionLimit)
         .def("setClosedLoopMaxFrequency", &Channel::setClosedLoopMaxFrequency)
-        // .def("setClosedLoopMoveAcceleration", &Channel::setClosedLoopMoveAcceleration)
+        .def("setClosedLoopMoveAcceleration", &Channel::setClosedLoopMoveAcceleration)
         .def("setClosedLoopMoveSpeed", &Channel::setClosedLoopMoveSpeed)
         .def("setPosition", &Channel::setPosition)
         .def("setPositionLimit", &Channel::setPositionLimit)
