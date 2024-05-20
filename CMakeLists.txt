@@ -56,6 +56,10 @@ else()
 endif()
 
 file(GLOB MCS_LIBRARIES ${SOURCE_DIR}/${MCS_ARCH}/lib/*.so)
+list(LENGTH MCS_LIBRARIES MCS_LIBS_FOUND)
+if(${MCS_LIBS_FOUND} EQUAL 0)
+    message(FATAL_ERROR "MCS shared libraries not found on path '${SOURCE_DIR}/${MCS_ARCH}/lib/'.")
+endif()
 
 include_directories(include)
 
