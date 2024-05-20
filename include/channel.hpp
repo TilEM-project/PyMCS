@@ -23,13 +23,13 @@ public:
         : m_sys_handle(sys_handle),
           m_channel_index(channel_index) {};
 
-    // unsigned int getClosedLoopMoveAcceleration() {
-    //     unsigned int acceleration;
-    //     SA_STATUS error;
-    //     if (error = SA_GetClosedLoopMoveAcceleration_S(m_sys_handle, m_channel_index, &acceleration))
-    //         throw MCSException("getClosedLoopMoveAcceleration", error);
-    //     return acceleration;
-    // };
+    unsigned int getClosedLoopMoveAcceleration() {
+        unsigned int acceleration;
+        SA_STATUS error;
+        if (error = SA_GetClosedLoopMoveAcceleration_S(m_sys_handle, m_channel_index, &acceleration))
+            throw MCSException("getClosedLoopMoveAcceleration", error);
+        return acceleration;
+    };
 
     unsigned int getClosedLoopMoveSpeed() {
         unsigned int speed;
@@ -53,11 +53,11 @@ public:
             throw MCSException("setClosedLoopMaxFrequency", error);
     };
 
-    // void setClosedLoopMoveAcceleration(unsigned int acceleration) {
-    //     SA_STATUS error;
-    //     if (error = SA_SetClosedLoopMoveAcceleration_S(m_sys_handle, m_channel_index, acceleration))
-    //         throw MCSException("setClosedLoopMoveAcceleration", error);
-    // };
+    void setClosedLoopMoveAcceleration(unsigned int acceleration) {
+        SA_STATUS error;
+        if (error = SA_SetClosedLoopMoveAcceleration_S(m_sys_handle, m_channel_index, acceleration))
+            throw MCSException("setClosedLoopMoveAcceleration", error);
+    };
 
     void setClosedLoopMoveSpeed(unsigned int speed) {
         SA_STATUS error;
