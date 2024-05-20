@@ -15,34 +15,6 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     message(FATAL_ERROR "Only Linux is supported!")
 endif()
 
-if(NOT ${CMAKE_SYSTEM_PROCESSOR} MATCHES "i686.*|i386.*|x86.*|x86_64.*|amd64.*|AMD64.*")
-    message(FATAL_ERROR "The wrapped MCS library only supports X86 systems.")
-endif()
-
-include(ExternalProject)
-ExternalProject_Add(
-    mcs
-    URL https://download.smaract.com/Downloads/Installer/MCS_3.0.28_Linux.tgz
-    URL_MD5 e8bf5aa5ebe1d4c4215617c6f4688679
-    # PATCH_COMMAND sed -i "s/    SRCPATH=.*/    SRCPATH=$base/g" <SOURCE_DIR>/install_mcs.sh
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-)
-ExternalProject_Add_Step(
-    mcs
-    install-lib
-    COMMAND ./install_mcs.sh
-    COMMENT "Installing MCS library"
-    EXCLUDE_FROM_MAIN true
-    WORKING_DIRECTORY <SOURCE_DIR>
-    DEPENDEES download
-    ALWAYS true
-)
-ExternalProject_Add_StepTargets(mcs install-lib)
-ExternalProject_Get_property(mcs SOURCE_DIR)
-include_directories(${SOURCE_DIR}/include)
-
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "amd64.*|x86_64.*|AMD64.*")
     if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
         set(MCS_ARCH arch_x86_64)
@@ -52,14 +24,45 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "amd64.*|x86_64.*|AMD64.*")
 elseif(${CMAKE_SYSTEM_PROCESSOR} MATCHES "i686.*|i386.*|x86.*")
     set(MCS_ARCH arch_x86)
 else()
-    message(FATAL_ERROR "Unknown processor architecture '${CMAKE_SYSTEM_PROCESSOR}'.")
+    message(FATAL_ERROR "The wrapped MCS library only supports X86 systems. Unknown processor architecture '${CMAKE_SYSTEM_PROCESSOR}'.")
 endif()
 
-file(GLOB MCS_LIBRARIES ${SOURCE_DIR}/${MCS_ARCH}/lib/*.so)
-list(LENGTH MCS_LIBRARIES MCS_LIBS_FOUND)
-if(${MCS_LIBS_FOUND} EQUAL 0)
-    message(FATAL_ERROR "MCS shared libraries not found on path '${SOURCE_DIR}/${MCS_ARCH}/lib/'.")
+if(${MCS_ARCH} STREQUAL "arch_x86")
+    set(MCS_LIBRARIES libd2xx_table.so libftchipid.so libftd2xx.so libmcscontrol.so libsmaractio.so)
+elseif(${MCS_ARCH} STREQUAL "arch_x86_64")
+    set(MCS_LIBRARIES libftchipid.so libftd2xx.so libmcscontrol.so libsmaractio.so)
+else()
+    message(FATAL_ERROR "Unknown processor architecture '${MCS_ARCH}'.")
 endif()
+
+include(ExternalProject)
+
+ExternalProject_Add(
+    patchelf
+    URL https://github.com/NixOS/patchelf/archive/refs/tags/0.18.0.tar.gz
+    URL_MD5 39be87713c18bfb3b2d27f4b23e28a18
+    CONFIGURE_COMMAND cd <SOURCE_DIR> && ./bootstrap.sh && ./configure
+    BUILD_COMMAND make -C <SOURCE_DIR>
+    INSTALL_COMMAND ""
+)
+
+ExternalProject_Get_property(patchelf SOURCE_DIR)
+
+ExternalProject_Add(
+    mcs
+    URL https://download.smaract.com/Downloads/Installer/MCS_3.0.28_Linux.tgz
+    URL_MD5 e8bf5aa5ebe1d4c4215617c6f4688679
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    DEPENDS patchelf
+    PATCH_COMMAND sh -c "${SOURCE_DIR}/src/patchelf --set-rpath '$ORIGIN' <SOURCE_DIR>/*/lib/*.so"
+)
+
+ExternalProject_Get_property(mcs SOURCE_DIR)
+include_directories(${SOURCE_DIR}/include)
+
+link_directories(${SOURCE_DIR}/${MCS_ARCH}/lib/)
 
 include_directories(include)
 
@@ -73,3 +76,7 @@ target_link_libraries(
     PRIVATE
     ${MCS_LIBRARIES}
 )
+
+add_custom_command(TARGET PyMCS POST_BUILD COMMAND cp ${SOURCE_DIR}/${MCS_ARCH}/lib/*.so* $<TARGET_FILE_DIR:PyMCS>/)
+
+set_target_properties(PyMCS PROPERTIES INSTALL_RPATH "$ORIGIN" INSTALL_RPATH_USE_LINK_PATH false BUILD_WITH_INSTALL_RPATH true)
