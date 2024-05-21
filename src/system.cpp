@@ -1,14 +1,12 @@
 #include "system.hpp"
-#include <iostream>
 
 
 std::string findSystems() {
-    char buffer[100];
-    unsigned int length = 100;
+    char buffer[2048];
+    unsigned int length = 2048;
     SA_STATUS error;
     if (error = SA_FindSystems("", buffer, &length))
         throw MCSException("findSystems", error);
-    std::cout << length << buffer << std::endl;
     return buffer;
 }
 
