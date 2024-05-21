@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 3.25)
 
 set(VCPKG_DIR $ENV{VCPKG_DIR})
 # Check if the variable is set
-if(NOT VCPKG_DIR)
-    message(FATAL_ERROR "VCPKG_DIR is not set")
+if(VCPKG_DIR)
+    message(STATUS "Using path: ${VCPKG_DIR}")
+    set(CMAKE_TOOLCHAIN_FILE "${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+else()
+    message(STATUS "VCPKG_DIR not set. Not using vcpkg.")
 endif()
-
-message(STATUS "Using path: ${VCPKG_DIR}")
-set(CMAKE_TOOLCHAIN_FILE "${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 
 project(PyMCS VERSION 0.1.0 LANGUAGES CXX)
 
@@ -66,7 +66,11 @@ link_directories(${SOURCE_DIR}/${MCS_ARCH}/lib/)
 
 include_directories(include)
 
-find_package(pybind11 CONFIG REQUIRED)
+find_package(pybind11 CONFIG)
+if(NOT pybind11_FOUND)
+    execute_process(COMMAND pybind11-config --cmake OUTPUT_VARIABLE PYBIND_DIR)
+    find_package(pybind11 CONFIG REQUIRED PATHS ${PYBIND_DIR}/..)
+endif()
 
 file(GLOB SRC src/*.cpp)
 
