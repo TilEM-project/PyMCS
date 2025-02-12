@@ -50,7 +50,7 @@ ExternalProject_Get_property(patchelf SOURCE_DIR)
 
 ExternalProject_Add(
     mcs
-    URL https://download.smaract.com/Downloads/Installer/MCS_3.0.28_Linux.tgz
+    URL MCS_3.0.28_Linux.tgz
     URL_MD5 e8bf5aa5ebe1d4c4215617c6f4688679
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
