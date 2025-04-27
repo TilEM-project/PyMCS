@@ -1,14 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
 
-set(VCPKG_DIR $ENV{VCPKG_DIR})
-# Check if the variable is set
-if(VCPKG_DIR)
-    message(STATUS "Using path: ${VCPKG_DIR}")
-    set(CMAKE_TOOLCHAIN_FILE "${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
-else()
-    message(STATUS "VCPKG_DIR not set. Not using vcpkg.")
-endif()
-
 project(PyMCS VERSION 0.1.0 LANGUAGES CXX)
 
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
@@ -53,10 +44,10 @@ ExternalProject_Add(
     URL ${CMAKE_CURRENT_SOURCE_DIR}/MCS_3.0.28_Linux.tgz
     URL_MD5 e8bf5aa5ebe1d4c4215617c6f4688679
     CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
+    BUILD_COMMAND sh -c "cp <SOURCE_DIR>/${MCS_ARCH}/lib/*.so* <BINARY_DIR>"
+    INSTALL_COMMAND sh -c "cp <BINARY_DIR>/* ${CMAKE_INSTALL_PREFIX}"
     DEPENDS patchelf
-    PATCH_COMMAND sh -c "${SOURCE_DIR}/src/patchelf --set-rpath '$ORIGIN' <SOURCE_DIR>/*/lib/*.so"
+    PATCH_COMMAND sh -c "${SOURCE_DIR}/src/patchelf --set-rpath '$ORIGIN' <SOURCE_DIR>/${MCS_ARCH}/lib/*.so"
 )
 
 ExternalProject_Get_property(mcs SOURCE_DIR)
@@ -72,15 +63,13 @@ if(NOT pybind11_FOUND)
     find_package(pybind11 CONFIG REQUIRED PATHS ${PYBIND_DIR}/..)
 endif()
 
-file(GLOB SRC src/*.cpp)
-
-pybind11_add_module(PyMCS MODULE ${SRC})
+pybind11_add_module(_PyMCS MODULE src/PyMCS/PyMCS.cpp src/system.cpp)
 target_link_libraries(
-    PyMCS
+    _PyMCS
     PRIVATE
     ${MCS_LIBRARIES}
 )
 
-add_custom_command(TARGET PyMCS POST_BUILD COMMAND cp ${SOURCE_DIR}/${MCS_ARCH}/lib/*.so* $<TARGET_FILE_DIR:PyMCS>/)
+set_target_properties(_PyMCS PROPERTIES INSTALL_RPATH "$ORIGIN" INSTALL_RPATH_USE_LINK_PATH false BUILD_WITH_INSTALL_RPATH true)
 
-set_target_properties(PyMCS PROPERTIES INSTALL_RPATH "$ORIGIN" INSTALL_RPATH_USE_LINK_PATH false BUILD_WITH_INSTALL_RPATH true)
+install(TARGETS _PyMCS DESTINATION .)

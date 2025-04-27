@@ -1,9 +1,0 @@
-{
-    "name": "pymcs",
-    "version-string": "0.1.0",
-    "dependencies": [
-        {
-            "name": "pybind11"
-        }
-    ]
-}

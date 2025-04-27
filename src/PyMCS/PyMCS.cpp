@@ -5,7 +5,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(PyMCS, m) {
+PYBIND11_MODULE(_PyMCS, m) {
     m.doc() = "Python bindings for SmarAct MCS API.";
 
     m.def("findSystems", &findSystems);
