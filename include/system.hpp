@@ -1,7 +1,7 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
-#include "MCSControl.h"
+#include "MCS/include/MCSControl.h"
 #include "exceptions.hpp"
 #include "channel.hpp"
 #include <vector>

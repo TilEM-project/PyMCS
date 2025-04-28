@@ -1,7 +1,7 @@
 #ifndef CHANNEL_H
 #define CHANNEL_H
 
-#include "MCSControl.h"
+#include "MCS/include/MCSControl.h"
 #include "exceptions.hpp"
 #include <vector>
 

@@ -26,36 +26,11 @@ else()
     message(FATAL_ERROR "Unknown processor architecture '${MCS_ARCH}'.")
 endif()
 
-include(ExternalProject)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external)
 
-ExternalProject_Add(
-    patchelf
-    URL https://github.com/NixOS/patchelf/archive/refs/tags/0.18.0.tar.gz
-    URL_MD5 39be87713c18bfb3b2d27f4b23e28a18
-    CONFIGURE_COMMAND cd <SOURCE_DIR> && ./bootstrap.sh && ./configure
-    BUILD_COMMAND make -C <SOURCE_DIR>
-    INSTALL_COMMAND ""
-)
+link_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/MCS/${MCS_ARCH}/lib/)
 
-ExternalProject_Get_property(patchelf SOURCE_DIR)
-
-ExternalProject_Add(
-    mcs
-    URL ${CMAKE_CURRENT_SOURCE_DIR}/MCS_3.0.28_Linux.tgz
-    URL_MD5 e8bf5aa5ebe1d4c4215617c6f4688679
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND sh -c "cp <SOURCE_DIR>/${MCS_ARCH}/lib/*.so* <BINARY_DIR>"
-    INSTALL_COMMAND sh -c "cp <BINARY_DIR>/* ${CMAKE_INSTALL_PREFIX}"
-    DEPENDS patchelf
-    PATCH_COMMAND sh -c "${SOURCE_DIR}/src/patchelf --set-rpath '$ORIGIN' <SOURCE_DIR>/${MCS_ARCH}/lib/*.so"
-)
-
-ExternalProject_Get_property(mcs SOURCE_DIR)
-include_directories(${SOURCE_DIR}/include)
-
-link_directories(${SOURCE_DIR}/${MCS_ARCH}/lib/)
-
-include_directories(include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 find_package(pybind11 CONFIG)
 if(NOT pybind11_FOUND)
@@ -73,3 +48,4 @@ target_link_libraries(
 set_target_properties(_PyMCS PROPERTIES INSTALL_RPATH "$ORIGIN" INSTALL_RPATH_USE_LINK_PATH false BUILD_WITH_INSTALL_RPATH true)
 
 install(TARGETS _PyMCS DESTINATION .)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/external/MCS/${MCS_ARCH}/lib/ DESTINATION .)
